@@ -46,7 +46,7 @@ class linux_recover_filesystem(linux_common.AbstractLinuxCommand):
             ents = file_path.split("/")
             out_path = os.path.join(self._config.DUMP_DIR, *ents)
 
-            os.chmod(out_path, inode.i_mode & 00777)
+            os.chmod(out_path, inode.i_mode & 0o0777)
             os.chown(out_path, inode.uid, inode.gid)
             os.utime(out_path, (inode.i_atime.tv_sec, inode.i_mtime.tv_sec))
 

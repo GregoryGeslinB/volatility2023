@@ -116,7 +116,7 @@ class PluginImporter(object):
             if self.modnames[i] is not None:
                 try:
                     __import__(i)
-                except Exception, e:
+                except Exception as e:
                     print "*** Failed to import " + i + " (" + str(e.__class__.__name__) + ": " + str(e) + ")"
                     # This is too early to have had the debug filter lowered to include debugging messages
                     debug.post_mortem(2)
