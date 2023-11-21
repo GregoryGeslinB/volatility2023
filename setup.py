@@ -1,52 +1,97 @@
-# This file is Copyright 2019 Volatility Foundation and licensed under the Volatility Software License 1.0
-# which is available at https://www.volatilityfoundation.org/license/vsl-v1.0
+#!/usr/bin/env python
+
+# Volatility
+# 
+# Authors:
+# AAron Walters <awalters@4tphi.net>
+# Mike Auty <mike.auty@gmail.com>
+#
+# This file is part of Volatility.
+#
+# Volatility is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# Volatility is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Volatility.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import setuptools
+try:
+    from setuptools import setup
+except ImportError:
+    from distutils.core import setup
+import volatility.constants
+import sys
+import os
 
-from volatility3.framework import constants
+py2exe_available = True
+try:
+    import py2exe #pylint: disable-msg=W0611,F0401
+except ImportError:
+    py2exe_available = False
 
-with open("README.md", "r", encoding="utf-8") as fh:
-    long_description = fh.read()
+def find_files(topdirs, py = False):
+    """Lists all python files under any topdir from the topdirs lists.
+    
+       Returns an appropriate list for data_files,
+       with source and destination directories the same"""
+    ret = []
+    for topdir in topdirs:
+        for r, _ds, fs in os.walk(topdir):
+            ret.append((r, [ os.path.join(r, f) for f in fs if (f.endswith('.py') or not py)]))
+    return ret
 
+opts = {}
 
-def get_install_requires():
-    requirements = []
-    with open("requirements-minimal.txt", "r", encoding = "utf-8") as fh:
-        for line in fh.readlines():
-            stripped_line = line.strip()
-            if stripped_line == "" or stripped_line.startswith("#"):
-                continue
-            requirements.append(stripped_line)
-    return requirements
+opts['name'] = "volatility"
+opts['version'] = volatility.constants.VERSION
+opts['description'] = "Volatility -- Volatile memory framework"
+opts['author'] = "AAron Walters"
+opts['author_email'] = "awalters@4tphi.net"
+opts['url'] = "http://www.volatilityfoundation.org"
+opts['license'] = "GPL"
+opts['scripts'] = ["vol.py"]
+opts['packages'] = ["volatility",
+                    "volatility.win32",
+                    "volatility.renderers",
+                    "volatility.plugins",
+                    "volatility.plugins.addrspaces",
+                    "volatility.plugins.overlays",
+                    "volatility.plugins.overlays.windows",
+                    "volatility.plugins.overlays.linux",
+                    "volatility.plugins.overlays.mac",
+                    "volatility.plugins.gui",
+                    "volatility.plugins.gui.vtypes",
+                    "volatility.plugins.linux",
+                    "volatility.plugins.registry",
+                    "volatility.plugins.malware", 
+                    "volatility.plugins.mac"]
+opts['data_files'] = find_files(['contrib'], py = True) + find_files(['tools'])
 
-setuptools.setup(
-    name="volatility3",
-    description="Memory forensics framework",
-    version=constants.PACKAGE_VERSION,
-    license="VSL",
-    keywords="volatility memory forensics framework windows linux volshell",
-    author="Volatility Foundation",
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    author_email="volatility@volatilityfoundation.org",
-    url="https://github.com/volatilityfoundation/volatility3/",
-    project_urls={
-        "Bug Tracker": "https://github.com/volatilityfoundation/volatility3/issues",
-        "Documentation": "https://volatility3.readthedocs.io/",
-        "Source Code": "https://github.com/volatilityfoundation/volatility3",
-    },
-    python_requires=">=3.7.0",
-    include_package_data=True,
-    exclude_package_data={"": ["development", "development.*"], "development": ["*"]},
-    packages=setuptools.find_namespace_packages(
-        exclude=["development", "development.*"]
-    ),
-    entry_points={
-        "console_scripts": [
-            "vol = volatility3.cli:main",
-            "volshell = volatility3.cli.volshell:main",
-        ],
-    },
-    install_requires=get_install_requires(),
-)
+if py2exe_available:
+    py2exe_distdir = 'dist/py2exe'
+    opts['console'] = [{ 'script': 'vol.py',
+                         'icon_resources': [(1, 'resources/volatility.ico')]
+                      }]
+    # Optimize must be 1 for plugins that use docstring for the help value,
+    # otherwise the help gets optimized out
+    opts['options'] = {'py2exe':{'optimize': 1,
+                                 'dist_dir': py2exe_distdir,
+                                 'packages': opts['packages'] + ['socket', 'ctypes', 'Crypto.Cipher', 'urllib', 'distorm3', 'yara', 'xml.etree.ElementTree'],
+                                 # This, along with zipfile = None, ensures a single binary
+                                 'bundle_files': 1,
+                                }
+                      }
+    opts['zipfile'] = None
+
+distrib = setup(**opts) #pylint: disable-msg=W0142
+
+if 'py2exe' in sys.argv:
+    # Any py2exe specific files or things that need doing can go in here
+    pass
