@@ -1,16 +1,6 @@
-include *.txt
-include *.win
-include MANIFEST.in
-include setup.py
-include resources/*
-include pyinstaller/*.py
-include volatility/*.py
-include contrib/plugins/*.py
-include contrib/plugins/aspaces/*.py
-include tools/*.py
-include tools/linux/*
-include tools/linux/pmem/*
-include tools/mac/*.py
-include vol.py
-include Makefile
-include pyinstaller.spec
+prune development
+include * .*
+include doc/make.bat doc/Makefile doc/requirements.txt
+recursive-include doc/source *
+recursive-include volatility3 *.json
+recursive-exclude doc/source volatility3.*.rst
