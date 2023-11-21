@@ -742,7 +742,7 @@ class CType(BaseObject):
 
         try:
             result = cls(offset = offset, vm = self.obj_vm, parent = self, name = attr, native_vm = self.obj_native_vm)
-        except InvalidOffsetError, e:
+        except InvalidOffsetError as e:
             return NoneObject(str(e))
 
         return result
